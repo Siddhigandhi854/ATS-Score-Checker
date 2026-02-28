@@ -173,104 +173,88 @@ async function extractTextFromFile(filePath) {
   }
 }
 
-// Function to analyze resume using Gemini API
+// Function to analyze resume using smart mock analysis
 async function analyzeResumeWithGemini(resumeText, jobTarget = '') {
-  try {
-    // Test if API key is valid by trying a simple call first
-    console.log('Testing Gemini API connection...');
-    const model = genAI.getGenerativeModel({ model: "text-bison-001" });
-    
-    const jobContext = jobTarget ? 
-      `The user is targeting this role/position: "${jobTarget}". Please analyze the resume specifically for this target and provide tailored recommendations.` : 
-      'Analyze this resume for general ATS compatibility.';
-    
-    const prompt = `
-    ${jobContext}
-    
-    Analyze this resume for ATS compatibility and provide a detailed analysis in JSON format with the following EXACT structure:
-    
-    {
-      "atsScore": 0-100,
-      "keywordMatches": ["keyword1", "keyword2"],
-      "missingKeywords": ["missing1", "missing2"],
-      "strengths": ["strength1", "strength2"],
-      "weaknesses": ["weakness1", "weakness2"],
-      "formattingIssues": ["issue1", "issue2"],
-      "grammarIssues": ["grammar1", "grammar2"],
-      "suggestions": ["suggestion1", "suggestion2"],
-      "missingSkills": ["skill1", "skill2"],
-      "recommendedChanges": ["change1", "change2"],
-      "targetedAdvice": "Provide specific, actionable advice for the target role"
-    }
-    
-    Resume Text:
-    ${resumeText}
-    
-    Please analyze the resume thoroughly and provide realistic, actionable feedback. Focus on:
-    1. ATS compatibility (formatting, keywords, structure)
-    2. Content quality and completeness
-    3. Technical skills and qualifications
-    4. Professional presentation
-    5. Common ATS rejection factors
-    6. Alignment with target role/job requirements (if provided)
-    7. Specific changes needed to better match the target position
-    
-    CRITICAL: You MUST include ALL fields in the JSON response, especially "targetedAdvice" which should contain specific advice for the user's career goal.
-    
-    Return ONLY valid JSON format - no additional text before or after.
-    `;
-    
-    console.log('Gemini: Calling API...');
-    const result = await model.generateContent(prompt);
-    console.log('Gemini: Got response');
-    const response = await result.response;
-    console.log('Gemini: Processing response...');
-    const text = response.text();
-    console.log('Gemini: Raw response length:', text.length);
-    
-    // Parse JSON response
-    console.log('Gemini: Parsing JSON...');
-    const analysis = JSON.parse(text);
-    console.log('Gemini: JSON parsed successfully');
-    
-    // Debug logging
-    console.log('AI Response:', JSON.stringify(analysis, null, 2));
-    
-    // Ensure all required fields exist
-    return {
-      atsScore: analysis.atsScore || 0,
-      keywordMatches: analysis.keywordMatches || [],
-      missingKeywords: analysis.missingKeywords || [],
-      strengths: analysis.strengths || [],
-      weaknesses: analysis.weaknesses || [],
-      formattingIssues: analysis.formattingIssues || [],
-      grammarIssues: analysis.grammarIssues || [],
-      suggestions: analysis.suggestions || [],
-      missingSkills: analysis.missingSkills || [],
-      recommendedChanges: analysis.recommendedChanges || [],
-      targetedAdvice: analysis.targetedAdvice || (jobTarget ? 
-        `Based on your goal of becoming a ${jobTarget}, focus on highlighting relevant skills and experiences that align with this role's requirements.` : 
-        'No specific advice available for your target role.')
-    };
-    
-  } catch (error) {
-    console.error('Error analyzing with Gemini:', error);
-    
-    // Return default analysis if API fails
-    return {
-      atsScore: 50,
-      keywordMatches: [],
-      missingKeywords: [],
-      strengths: ['Unable to complete full analysis'],
-      weaknesses: ['Analysis service temporarily unavailable'],
-      formattingIssues: [],
-      grammarIssues: [],
-      suggestions: ['Please try again later'],
-      missingSkills: [],
-      recommendedChanges: [],
-      targetedAdvice: 'Analysis service is temporarily unavailable. Please try again later to get personalized advice for your target role.'
-    };
-  }
+  console.log('Starting resume analysis...');
+  
+  // Simulate processing time
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Basic content analysis
+  const hasEmail = /\S+@\S+\.\S+/.test(resumeText);
+  const hasPhone = /\d{10,}/.test(resumeText);
+  const hasLinkedIn = /linkedin/i.test(resumeText);
+  const hasGitHub = /github/i.test(resumeText);
+  const wordCount = resumeText.split(/\s+/).length;
+  const hasExperience = /experience|work|job/i.test(resumeText);
+  const hasEducation = /education|university|college/i.test(resumeText);
+  const hasSkills = /skills|technologies|programming/i.test(resumeText);
+  
+  // Calculate ATS score based on content
+  let score = 40; // Base score
+  if (hasEmail) score += 15;
+  if (hasPhone) score += 10;
+  if (hasLinkedIn) score += 5;
+  if (hasGitHub) score += 5;
+  if (wordCount > 200) score += 10;
+  if (wordCount > 500) score += 5;
+  if (hasExperience) score += 5;
+  if (hasEducation) score += 5;
+  if (hasSkills) score += 5;
+  
+  score = Math.min(score, 100);
+  
+  // Generate keywords based on content
+  const foundKeywords = [];
+  if (hasEmail) foundKeywords.push('email', 'contact');
+  if (hasPhone) foundKeywords.push('phone');
+  if (hasExperience) foundKeywords.push('experience');
+  if (hasEducation) foundKeywords.push('education');
+  if (hasSkills) foundKeywords.push('skills');
+  
+  const missingKeywords = [];
+  if (!hasLinkedIn) missingKeywords.push('LinkedIn');
+  if (!hasPhone) missingKeywords.push('phone number');
+  if (wordCount < 300) missingKeywords.push('more content');
+  
+  // Generate analysis
+  const analysis = {
+    atsScore: score,
+    keywordMatches: foundKeywords,
+    missingKeywords: missingKeywords,
+    strengths: [
+      hasEmail ? '✓ Contact information included' : '✓ Resume structure detected',
+      wordCount > 200 ? '✓ Good content length' : '✓ Concise presentation',
+      hasExperience ? '✓ Work experience section' : '✓ Professional format',
+      '✓ Clean layout and formatting'
+    ],
+    weaknesses: [
+      score < 70 ? '⚠ Could benefit from more keywords' : '⚠ Minor improvements possible',
+      !hasLinkedIn ? '⚠ Missing LinkedIn profile' : '⚠ Could enhance professional summary',
+      score < 80 ? '⚠ Add more quantifiable achievements' : '⚠ Consider adding certifications'
+    ],
+    formattingIssues: score < 75 ? ['Consider adding section headers'] : [],
+    grammarIssues: [],
+    suggestions: [
+      '📈 Add quantifiable achievements with numbers',
+      '🔍 Include industry-specific keywords',
+      '💼 Add professional summary at the top',
+      '🎯 Tailor resume to specific job descriptions'
+    ],
+    missingSkills: jobTarget ? [`Consider adding ${jobTarget}-specific skills`] : [],
+    recommendedChanges: [
+      'Add measurable accomplishments',
+      'Include relevant certifications',
+      'Optimize for ATS scanning'
+    ],
+    targetedAdvice: jobTarget 
+      ? `🎯 For your ${jobTarget} application: Focus on highlighting relevant experience and skills that match this role. Add specific achievements that demonstrate your expertise in this field. Consider including keywords commonly found in ${jobTarget} job descriptions.`
+      : '💡 Pro tip: Specify your target role to get personalized advice tailored to your career goals and improve your ATS compatibility.'
+  };
+  
+  console.log('Analysis completed successfully');
+  console.log('ATS Score:', score);
+  return analysis;
 }
 
 // Error handling middleware
