@@ -79,26 +79,46 @@ app.get('/', (req, res) => {
 });
 
 app.post('/analyze', upload.single('resume'), async (req, res) => {
+  console.log('=== Upload Analysis Started ===');
+  console.log('File:', req.file);
+  console.log('Body:', req.body);
+  
   try {
     if (!req.file) {
+      console.log('ERROR: No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    console.log('Step 1: File received successfully');
+    
     // Extract text from resume
+    console.log('Step 2: Extracting text from file...');
     const resumeText = await extractTextFromFile(req.file.path);
+    console.log('Step 2: Text extracted, length:', resumeText.length);
     
     // Get job target from form
     const jobTarget = req.body.jobTarget || '';
+    console.log('Step 3: Job target:', jobTarget);
     
     // Analyze with Gemini API
+    console.log('Step 4: Starting Gemini analysis...');
     const analysis = await analyzeResumeWithGemini(resumeText, jobTarget);
+    console.log('Step 4: Analysis completed');
     
     // Clean up uploaded file
+    console.log('Step 5: Cleaning up file...');
     fs.unlinkSync(req.file.path);
+    console.log('Step 5: File cleaned up');
     
+    console.log('=== Upload Analysis Completed Successfully ===');
     res.render('result', { analysis, jobTarget });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('=== UPLOAD ERROR DETAILS ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('=== END ERROR DETAILS ===');
+    
     // Return HTML error page instead of JSON
     res.status(500).send(`
       <!DOCTYPE html>
@@ -198,12 +218,18 @@ async function analyzeResumeWithGemini(resumeText, jobTarget = '') {
     Return ONLY valid JSON format - no additional text before or after.
     `;
     
+    console.log('Gemini: Calling API...');
     const result = await model.generateContent(prompt);
+    console.log('Gemini: Got response');
     const response = await result.response;
+    console.log('Gemini: Processing response...');
     const text = response.text();
+    console.log('Gemini: Raw response length:', text.length);
     
     // Parse JSON response
+    console.log('Gemini: Parsing JSON...');
     const analysis = JSON.parse(text);
+    console.log('Gemini: JSON parsed successfully');
     
     // Debug logging
     console.log('AI Response:', JSON.stringify(analysis, null, 2));
