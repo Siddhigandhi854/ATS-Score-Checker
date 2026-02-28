@@ -79,69 +79,59 @@ app.get('/', (req, res) => {
 });
 
 app.post('/analyze', upload.single('resume'), async (req, res) => {
-  console.log('=== Upload Analysis Started ===');
-  console.log('File:', req.file);
-  console.log('Body:', req.body);
+  console.log('=== SIMPLE UPLOAD TEST ===');
   
   try {
+    // Basic checks
     if (!req.file) {
-      console.log('ERROR: No file uploaded');
-      return res.status(400).json({ error: 'No file uploaded' });
+      console.log('No file received');
+      return res.status(400).send('No file uploaded');
     }
-
-    console.log('Step 1: File received successfully');
     
-    // Extract text from resume
-    console.log('Step 2: Extracting text from file...');
-    const resumeText = await extractTextFromFile(req.file.path);
-    console.log('Step 2: Text extracted, length:', resumeText.length);
+    console.log('File received:', req.file.originalname);
+    console.log('File size:', req.file.size);
+    console.log('File path:', req.file.path);
     
-    // Get job target from form
+    // Get job target
     const jobTarget = req.body.jobTarget || '';
-    console.log('Step 3: Job target:', jobTarget);
+    console.log('Job target:', jobTarget);
     
-    // Analyze with Gemini API
-    console.log('Step 4: Starting Gemini analysis...');
-    const analysis = await analyzeResumeWithGemini(resumeText, jobTarget);
-    console.log('Step 4: Analysis completed');
+    // Simple mock analysis
+    const analysis = {
+      atsScore: 75,
+      keywordMatches: ['test', 'resume'],
+      missingKeywords: [],
+      strengths: ['File uploaded successfully'],
+      weaknesses: ['Test weakness'],
+      formattingIssues: [],
+      grammarIssues: [],
+      suggestions: ['Test suggestion'],
+      missingSkills: [],
+      recommendedChanges: [],
+      targetedAdvice: 'Test advice for ' + (jobTarget || 'general position')
+    };
     
-    // Clean up uploaded file
-    console.log('Step 5: Cleaning up file...');
-    fs.unlinkSync(req.file.path);
-    console.log('Step 5: File cleaned up');
+    // Clean up file
+    try {
+      fs.unlinkSync(req.file.path);
+      console.log('File cleaned up');
+    } catch (cleanupError) {
+      console.log('Cleanup error:', cleanupError.message);
+    }
     
-    console.log('=== Upload Analysis Completed Successfully ===');
+    console.log('=== SUCCESS ===');
     res.render('result', { analysis, jobTarget });
-  } catch (error) {
-    console.error('=== UPLOAD ERROR DETAILS ===');
-    console.error('Error type:', error.constructor.name);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-    console.error('=== END ERROR DETAILS ===');
     
-    // Return HTML error page instead of JSON
+  } catch (error) {
+    console.error('=== UPLOAD ERROR ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    
+    // Simple error response
     res.status(500).send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Upload Error</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-      </head>
-      <body class="bg-light">
-        <div class="container mt-5">
-          <div class="row justify-content-center">
-            <div class="col-md-6">
-              <div class="alert alert-danger">
-                <h4>Upload Failed</h4>
-                <p>There was an error processing your resume. Please try again.</p>
-                <p><strong>Error:</strong> ${error.message}</p>
-                <a href="/" class="btn btn-primary">Try Again</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </body>
-      </html>
+      <h2>Upload Error</h2>
+      <p>Error: ${error.message}</p>
+      <a href="/">Go Back</a>
     `);
   }
 });
