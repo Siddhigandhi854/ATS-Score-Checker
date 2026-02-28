@@ -265,9 +265,12 @@
             fileInput.click();
         });
         
-        // Upload area click
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
+        // Upload area click (but not if clicking on browse button)
+        uploadArea.addEventListener('click', (e) => {
+            // Only trigger if not clicking on the browse button itself
+            if (!browseBtn.contains(e.target)) {
+                fileInput.click();
+            }
         });
         
         // File input change
