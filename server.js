@@ -178,7 +178,7 @@ async function analyzeResumeWithGemini(resumeText, jobTarget = '') {
   try {
     // Test if API key is valid by trying a simple call first
     console.log('Testing Gemini API connection...');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "text-bison-001" });
     
     const jobContext = jobTarget ? 
       `The user is targeting this role/position: "${jobTarget}". Please analyze the resume specifically for this target and provide tailored recommendations.` : 
