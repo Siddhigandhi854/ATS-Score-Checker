@@ -99,7 +99,30 @@ app.post('/analyze', upload.single('resume'), async (req, res) => {
     res.render('result', { analysis, jobTarget });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Return HTML error page instead of JSON
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Upload Error</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      </head>
+      <body class="bg-light">
+        <div class="container mt-5">
+          <div class="row justify-content-center">
+            <div class="col-md-6">
+              <div class="alert alert-danger">
+                <h4>Upload Failed</h4>
+                <p>There was an error processing your resume. Please try again.</p>
+                <p><strong>Error:</strong> ${error.message}</p>
+                <a href="/" class="btn btn-primary">Try Again</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
   }
 });
 
@@ -226,15 +249,78 @@ async function analyzeResumeWithGemini(resumeText, jobTarget = '') {
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File size too large. Maximum size is 5MB.' });
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>File Size Error</title>
+          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body class="bg-light">
+          <div class="container mt-5">
+            <div class="row justify-content-center">
+              <div class="col-md-6">
+                <div class="alert alert-warning">
+                  <h4>File Too Large</h4>
+                  <p>File size too large. Maximum size is 5MB.</p>
+                  <a href="/" class="btn btn-primary">Try Again</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
     }
   }
   
   if (error.message === 'Only PDF and DOCX files are allowed') {
-    return res.status(400).json({ error: error.message });
+    return res.status(400).send(`
+      <!DOCTYPE html>
+        <html>
+        <head>
+          <title>File Type Error</title>
+          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body class="bg-light">
+          <div class="container mt-5">
+            <div class="row justify-content-center">
+              <div class="col-md-6">
+                <div class="alert alert-warning">
+                  <h4>Invalid File Type</h4>
+                  <p>Only PDF and DOCX files are allowed.</p>
+                  <a href="/" class="btn btn-primary">Try Again</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
   }
   
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).send(`
+    <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Server Error</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      </head>
+      <body class="bg-light">
+        <div class="container mt-5">
+          <div class="row justify-content-center">
+            <div class="col-md-6">
+              <div class="alert alert-danger">
+                <h4>Server Error</h4>
+                <p>Internal server error. Please try again.</p>
+                <a href="/" class="btn btn-primary">Try Again</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
 });
 
 // Start server
