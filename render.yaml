@@ -1,0 +1,30 @@
+services:
+  # Web Service
+  - type: web
+    name: ATS-Score-Checker
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true
+    
+    # Environment variables (set these in Render dashboard)
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    
+    # Health check
+    healthCheckPath: /
+    
+    # Build and deployment settings
+    buildFilter:
+      paths:
+        - package.json
+        - package-lock.json
+        - server.js
+        - views/**
+    
+    # Add-ons
+    addons: []
