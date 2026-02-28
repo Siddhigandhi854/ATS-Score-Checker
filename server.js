@@ -176,7 +176,9 @@ async function extractTextFromFile(filePath) {
 // Function to analyze resume using Gemini API
 async function analyzeResumeWithGemini(resumeText, jobTarget = '') {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    // Test if API key is valid by trying a simple call first
+    console.log('Testing Gemini API connection...');
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const jobContext = jobTarget ? 
       `The user is targeting this role/position: "${jobTarget}". Please analyze the resume specifically for this target and provide tailored recommendations.` : 
